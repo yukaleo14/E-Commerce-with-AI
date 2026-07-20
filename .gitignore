@@ -1,0 +1,35 @@
+# ========================
+# 1. Credenciales y Secretos (¡CRÍTICO!)
+# ========================
+.env
+.env.*
+
+# ========================
+# 2. Entornos Virtuales de Python
+# ========================
+.venv/
+venv/
+env/
+
+# ========================
+# 3. Base de Datos Vectorial (ChromaDB)
+# ========================
+chroma_db/
+data/
+
+# ========================
+# 4. Caché y Archivos Compilados de Python
+# ========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ========================
+# 5. Archivos del Sistema Operativo y Editores
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
