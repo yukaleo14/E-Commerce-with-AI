@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 import tempfile
 from dotenv import load_dotenv
+import uvicorn
 
 load_dotenv()
 
@@ -106,3 +107,9 @@ def ask(body: Question):
         
         # Fallback para cualquier otro tipo de error técnico (como pérdida de conexión)
         return Answer(answer="Lo siento, tuve un problema técnico momentáneo al procesar tu consulta. ¿Podrías intentar de nuevo?")
+    
+
+if __name__ == "__main__":
+    # Lee el puerto de Render o usa 8000 por defecto
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("src.main:app", host="0.0.0.0", port=port)
