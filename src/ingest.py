@@ -23,8 +23,10 @@ from dotenv import load_dotenv
 
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+# from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import Chroma
+
 
 load_dotenv()
 
@@ -53,7 +55,8 @@ def ingest():
         return
 
     print("Generando embeddings (primera vez puede tardar ~1 min)...")
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
     print(f"Guardando en ChromaDB: {CHROMA_DIR}")
     Chroma.from_documents(
