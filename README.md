@@ -85,6 +85,38 @@ Ejemplos de preguntas que el agente puede responder:
 
 *  **Políticas de Envíos:** "¿Cuánto demora el envío estándar y qué pasa si no estoy en casa?"
 
+## Despliegue en Producción (Render)
+La aplicación se encuentra desplegada y accesible públicamente utilizando Render como plataforma de Platform-as-a-Service (PaaS). Se optó por una estrategia de despliegue contenerizado para garantizar la consistencia del entorno entre desarrollo y producción.
+
+### Arquitectura de Despliegue
+Contenerización (Docker): El proyecto incluye un Dockerfile que empaqueta el sistema operativo base (Linux), las dependencias de Python (requirements.txt), el código fuente y las herramientas del sistema necesarias para compilar librerías complejas como ChromaDB y LangChain.
+
+Orquestación en Render: El repositorio de GitHub está conectado directamente a un Web Service de Render configurado con el entorno nativo de Docker (Docker Runtime).
+
+Integración Continua (CI): Cada vez que se realiza un push a la rama principal del repositorio, Render detecta los cambios, reconstruye la imagen del contenedor automáticamente y despliega la nueva versión sin tiempo de inactividad (Zero Downtime Deployment).
+
+### Configuración del Entorno de Producción
+Para replicar este despliegue en un entorno propio de Render, se deben seguir estos lineamientos en el panel de configuración del Web Service:
+
+Repository: Conectar el repositorio de GitHub que contiene el proyecto.
+
+Environment / Runtime: Seleccionar Docker (Render detectará el Dockerfile automáticamente).
+
+Port Binding: Uvicorn está configurado en la última línea del Dockerfile para escuchar el puerto dinámico asignado por la plataforma (${PORT:-8000}).
+
+Variables de Entorno (Environment Variables): Se deben inyectar de forma segura en el panel de Render las siguientes credenciales (nunca subirlas al repositorio en el archivo .env):
+
+*  GOOGLE_API_KEY: Clave de acceso a la API de Gemini.
+
+*  ADMIN_PASSWORD: Contraseña para el endpoint de administración.
+
+Y ademas debe agregar la siguiente variable debido a que render utiliza un puerto aleatorio por lo que no se ejecutara la aplicacion:
+
+*  PORT: 8000
+
+### Gestión de la Base Vectorial en la Nube
+Dado que Render utiliza discos efímeros en sus capas gratuitas, la aplicación puede estar configurada para re-ingestar el documento PDF principal (TechStore.pdf) en memoria durante el arranque del contenedor, o bien se le puede anexar un Disco Persistente (Persistent Disk) en la configuración del servicio para mantener la carpeta chroma_db intacta entre reinicios del servidor.
+
 *  **Soporte Post-Venta**: "Compré unos auriculares pero me arrepentí, ¿puedo devolverlos?"
 
 *  **Consultas Técnicas:** "¿Qué especificaciones tiene el Router MikroTik?"
