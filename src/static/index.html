@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore - E-commerce Informático</title>
+    <style>
+        /* Variables y reseteo base */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+        }
+
+        /* Cabecera */
+        header { 
+            background: white; 
+            padding: 1rem 5%; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            color: var(--primary); 
+            letter-spacing: -0.5px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-muted);
+            margin-left: 1.5rem;
+            font-weight: 500;
+        }
+
+        nav a:hover { color: var(--primary); }
+
+        /* Grilla de Productos */
+        .container { 
+            max-width: 1200px; 
+            margin: 3rem auto; 
+            padding: 0 1.5rem; 
+        }
+        
+        h2 {
+            margin-bottom: 2rem;
+            font-size: 1.75rem;
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
+            gap: 2rem; 
+        }
+        
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 1.5rem; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover { transform: translateY(-5px); }
+        
+        .product-image { 
+            background: #f1f5f9; 
+            height: 180px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-bottom: 1rem; 
+            border-radius: 8px;
+            font-size: 4rem; /* Usamos emojis como placeholder */
+        }
+        
+        .product-title { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        
+        .price { 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: var(--text-main); 
+            margin: 1rem 0; 
+        }
+        
+        .btn-add { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 0.75rem 1rem; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .btn-add:hover { background: var(--primary-hover); }
+
+        /* Widget del Agente IA */
+        #chat-widget { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            width: 340px; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 1000;
+        }
+        
+        /* Estado colapsado: muestra solo la cabecera */
+        #chat-widget.collapsed { 
+            transform: translateY(calc(100% - 56px)); 
+        }
+        
+        .chat-header { 
+            background: var(--text-main); 
+            color: white; 
+            padding: 1rem; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 600; 
+            height: 56px;
+        }
+        
+        .chat-body { 
+            height: 350px; 
+            padding: 1rem; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1rem; 
+            background: #f8fafc;
+        }
+        
+        .message { 
+            padding: 0.75rem 1rem; 
+            border-radius: 12px; 
+            max-width: 85%; 
+            font-size: 0.95rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+        
+        .message.ai { 
+            background: white; 
+            border: 1px solid #e2e8f0;
+            align-self: flex-start; 
+            border-bottom-left-radius: 2px; 
+        }
+        
+        .message.user { 
+            background: var(--primary); 
+            color: white; 
+            align-self: flex-end; 
+            border-bottom-right-radius: 2px; 
+        }
+        
+        .chat-input { 
+            display: flex; 
+            border-top: 1px solid #e2e8f0; 
+            background: white;
+            padding: 0.5rem;
+        }
+        
+        .chat-input input { 
+            flex: 1; 
+            border: none; 
+            padding: 0.75rem; 
+            outline: none; 
+            font-size: 0.95rem;
+        }
+        
+        .chat-input button { 
+            background: transparent;
+            color: var(--primary);
+            border: none;
+            padding: 0 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .chat-input button:hover { color: var(--primary-hover); }
+
+        /* Loading indicator animado */
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: transparent;
+            padding: 0.5rem;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #94a3b8;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">TechStore.</div>
+        <nav>
+            <a href="#">Catálogo</a>
+            <a href="#">Ofertas</a>
+            <a href="#">Soporte</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h2>Productos Destacados</h2>
+        <div class="grid">
+            <div class="card">
+                <div class="product-image">🎧</div>
+                <h3 class="product-title">Auriculares Inalámbricos Pro ANC</h3>
+                <p class="price">$120.00</p>
+                <button class="btn-add">Agregar al carrito</button>
+            </div>
+            <div class="card">
+                <div class="product-image">💻</div>
+                <h3 class="product-title">Notebook Inspiron Ultra 15"</h3>
+                <p class="price">$850.00</p>
+                <button class="btn-add">Agregar al carrito</button>
+            </div>
+            <div class="card">
+                <div class="product-image">🖥️</div>
+                <h3 class="product-title">Monitor Curvo 27" 144Hz</h3>
+                <p class="price">$320.00</p>
+                <button class="btn-add">Agregar al carrito</button>
+            </div>
+            <div class="card">
+                <div class="product-image">🔈</div>
+                <h3 class="product-title">Parlante Bluetooth 360°</h3>
+                <p class="price">$65.00</p>
+                <button class="btn-add">Agregar al carrito</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Widget de IA -->
+    <div id="chat-widget" class="collapsed">
+        <div class="chat-header" onclick="toggleChat()">
+            <span>🤖 Asistente Virtual</span>
+            <span id="toggle-icon">▲</span>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div class="message ai">¡Hola! Soy el agente de inteligencia artificial de TechStore. ¿En qué te puedo ayudar hoy? (Ej: precios, envíos, stock)</div>
+            <div id="typing" class="typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Escribe tu consulta..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        // Genera un ID único para la sesión del usuario al cargar la página
+        const sessionId = "session-" + Math.random().toString(36).substring(2, 15);
+
+        function toggleChat() {
+            const widget = document.getElementById('chat-widget');
+            const icon = document.getElementById('toggle-icon');
+            widget.classList.toggle('collapsed');
+            icon.innerText = widget.classList.contains('collapsed') ? '▲' : '▼';
+            
+            // Foco en el input al abrir
+            if(!widget.classList.contains('collapsed')) {
+                document.getElementById('user-input').focus();
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            // Mostrar mensaje del usuario
+            addMessage(text, 'user');
+            input.value = '';
+
+            // Mostrar indicador de "escribiendo..."
+            const typingIndicator = document.getElementById('typing');
+            const body = document.getElementById('chat-body');
+            typingIndicator.style.display = 'block';
+            body.appendChild(typingIndicator); // Mover al final
+            body.scrollTop = body.scrollHeight;
+
+            try {
+                // Realizar la petición POST al backend de FastAPI
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // El backend espera un JSON con la clave "question"
+                    body: JSON.stringify({ question: text, session_id: sessionId })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                // Parsear la respuesta JSON del servidor
+                const data = await response.json();
+                
+                // Ocultar el indicador y mostrar la respuesta de Gemini
+                typingIndicator.style.display = 'none';
+                // El backend devuelve un JSON con la clave "answer"
+                addMessage(data.answer, 'ai');
+
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                typingIndicator.style.display = 'none';
+                addMessage('Lo siento, estoy teniendo problemas para conectarme al servidor en este momento.', 'ai');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const body = document.getElementById('chat-body');
+            const typingIndicator = document.getElementById('typing');
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            if (sender === 'ai') {
+                // Convierte los **textos** en negritas HTML
+                let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                // Inyectamos como HTML para que el navegador procese las etiquetas
+                msgDiv.innerHTML = formattedText;
+            } else {
+                // Los mensajes del usuario se mantienen como texto plano por seguridad
+                msgDiv.textContent = text;
+            }
+            
+            // Insertar antes del indicador de typing
+            body.insertBefore(msgDiv, typingIndicator);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        // Simulación estática del razonamiento del Agente
+        function generateAIResponse(query) {
+            if (query.includes('precio') || query.includes('cuanto')) {
+                return 'Nuestros precios varían según el producto. Por ejemplo, los monitores arrancan en $320 y las notebooks en $850. ¿Buscas algo en particular?';
+            } else if (query.includes('envio') || query.includes('empresa') || query.includes('ubicacion')) {
+                return 'TechStore realiza envíos a todo el país. Contamos con sucursales físicas y garantizamos entregas a domicilio en 24 a 48 hs hábiles.';
+            } else if (query.includes('auricular') || query.includes('notebook') || query.includes('monitor') || query.includes('parlante')) {
+                return '¡Excelente elección! Todos nuestros equipos cuentan con 12 meses de garantía directa. ¿Te gustaría saber las especificaciones técnicas?';
+            } else if (query.includes('hola') || query.includes('buen dia') || query.includes('buenas')) {
+                return '¡Hola! ¿Buscabas información sobre algún equipo o componente específico para armar tu setup?';
+            } else {
+                return 'Como soy un modelo de prueba estático, solo respondo a ciertas palabras clave. Por favor, preguntame sobre "precios", "envíos" o "notebooks".';
+            }
+        }
+    </script>
+</body>
+</html>

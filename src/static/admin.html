@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore - Panel de Administración IA</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #f8fafc; padding: 2rem; color: #1e293b; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; color: #2563eb; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        input[type="password"], input[type="file"] { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        button { background: #2563eb; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:hover { background: #1d4ed8; }
+        #status { margin-top: 1rem; padding: 1rem; border-radius: 6px; display: none; }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ingesta de Documentación</h1>
+        <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #64748b;">Sube un nuevo archivo PDF para actualizar la base de conocimientos del Agente de IA.</p>
+        
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="password">Contraseña de Administrador:</label>
+                <input type="password" id="password" required placeholder="Ingresa la contraseña del archivo .env">
+            </div>
+            
+            <div class="form-group">
+                <label for="pdfFile">Archivo PDF:</label>
+                <input type="file" id="pdfFile" accept=".pdf" required>
+            </div>
+            
+            <button type="submit">Subir e Indexar Documento</button>
+        </form>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+            const statusDiv = document.getElementById('status');
+            
+            if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+                showStatus('Por favor selecciona un archivo PDF válido.', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showStatus('Subiendo y procesando...', true, true);
+                
+                // Petición al endpoint definido en main.py
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    headers: {
+                        'x-admin-password': password
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showStatus(`¡Éxito! ${result.message}`, true);
+                    fileInput.value = ''; // Limpiar el input
+                } else {
+                    showStatus(`Error: ${result.detail || 'Fallo en la subida'}`, false);
+                }
+            } catch (error) {
+                showStatus('Error de conexión con el servidor.', false);
+            }
+        });
+
+        function showStatus(message, isSuccess, isPending = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            if (isPending) {
+                statusDiv.className = '';
+                statusDiv.style.background = '#f1f5f9';
+                statusDiv.style.color = '#334155';
+            } else {
+                statusDiv.className = isSuccess ? 'success' : 'error';
+                statusDiv.style.background = '';
+                statusDiv.style.color = '';
+            }
+        }
+    </script>
+</body>
+</html>
