@@ -1,28 +1,42 @@
 import streamlit as st
-# Asumiendo que tienes tu agente configurado en src/agent.py
-from src.agent import obtener_respuesta_del_agente 
+from src.agent import build_chain
 
 st.title("TechStore - Asistente Virtual 🤖")
-st.write("¡Hola! Pregúntame sobre nuestros productos, envíos o políticas.")
 
-# Inicializar la memoria del chat en la sesión de Streamlit
+# 1. Cargamos el agente en caché para que solo se construya una vez
+@st.cache_resource
+def iniciar_agente():
+    return build_chain()
+
+# Instanciamos el agente
+agente = iniciar_agente()
+
+# 2. Inicializamos el historial visual en Streamlit
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = []
 
-# Mostrar el historial de mensajes en la pantalla
 for msg in st.session_state.mensajes:
     with st.chat_message(msg["rol"]):
         st.markdown(msg["contenido"])
 
-# Caja de texto para que el usuario escriba
+# 3. Lógica del Chat
 if prompt := st.chat_input("Escribe tu consulta aquí..."):
-    # Mostrar lo que escribió el usuario
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.mensajes.append({"rol": "user", "contenido": prompt})
 
-    # Llamar a tu IA y mostrar la respuesta
     with st.chat_message("assistant"):
-        respuesta = obtener_respuesta_del_agente(prompt) # Tu función de LangChain
-        st.markdown(respuesta)
-    st.session_state.mensajes.append({"rol": "assistant", "contenido": respuesta})
+        # Llamamos al agente de LangChain
+        # Pasamos el input_messages_key y el session_id que configuraste
+        respuesta_cruda = agente.invoke(
+            {"question": prompt},
+            config={"configurable": {"session_id": "sesion_streamlit_unica"}}
+        )
+        
+        # Como usaste StrOutputParser() en tu core_chain, 
+        # la respuesta ya es el texto directo, no un diccionario.
+        respuesta_final = respuesta_cruda
+        
+        st.markdown(respuesta_final)
+        
+    st.session_state.mensajes.append({"rol": "assistant", "contenido": respuesta_final})
