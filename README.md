@@ -1,5 +1,5 @@
 # E-Commerce-with-AI
-Aplicacion de e-commerce simple para mostrar funcionamiento de un agente de inteligencia artifical
+Aplicacion de e-commerce estatica sin funcionalidad util, simplemente visual para entender el contexto, donde se podra utilizar el asistente virtual/agente el cual brindara informacion sobre la empresa, productos, politica, entre otras cosas de las cuales obtiene conocimiento segun el documento brindado.
 # TechStore - E-commerce con Asistente Virtual RAG (Gemini)
 
 ## Descripción General
