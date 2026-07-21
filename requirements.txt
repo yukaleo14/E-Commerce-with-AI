@@ -4,7 +4,7 @@ langchain-google-genai
 pinecone-client
 langchain-pinecone
 fastapi>=0.115
-uvicorn[standard]>=0.115
+uvicorn
 sentence-transformers>=3.0
 pymupdf>=1.24
 python-dotenv>=1.0
