@@ -1,7 +1,8 @@
 langchain>=0.3
 langchain-community>=0.3
 langchain-google-genai
-chromadb>=0.5
+pinecone-client
+langchain-pinecone
 fastapi>=0.115
 uvicorn[standard]>=0.115
 sentence-transformers>=3.0

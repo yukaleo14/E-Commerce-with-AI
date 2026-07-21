@@ -14,7 +14,7 @@ import httpx
 
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings, HarmCategory, HarmBlockThreshold
 from pathlib import Path
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_pinecone import PineconeVectorStore
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.output_parsers import StrOutputParser
@@ -53,10 +53,9 @@ def _format_docs(docs):
 
 def build_chain():
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    vectorstore = Chroma(
-        persist_directory=CHROMA_DIR,
-        embedding_function=embeddings,
-        collection_name=COLLECTION,
+    vectorstore = PineconeVectorStore(
+        index_name="e-commerce-ai",
+        embedding_function=embeddings
     )
 
     # General retriever para TechStore
