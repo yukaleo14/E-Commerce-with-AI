@@ -53,7 +53,7 @@ def build_chain():
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     vectorstore = PineconeVectorStore(
         index_name="e-commerce-ai",
-        embedding_function=embeddings
+        embedding=embeddings
     )
 
     # General retriever para TechStore
