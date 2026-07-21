@@ -56,7 +56,7 @@ def ingest():
 
     print("Generando embeddings (primera vez puede tardar ~1 min)...")
     # embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-004")
 
     print(f"Guardando en ChromaDB: {CHROMA_DIR}")
     Chroma.from_documents(

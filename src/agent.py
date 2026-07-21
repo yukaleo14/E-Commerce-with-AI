@@ -50,7 +50,7 @@ def _format_docs(docs):
 
 
 def build_chain():
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2")
     vectorstore = PineconeVectorStore(
         index_name="e-commerce-ai",
         embedding=embeddings,

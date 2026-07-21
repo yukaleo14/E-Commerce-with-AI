@@ -96,6 +96,8 @@ def ask(body: Question):
     except Exception as e:
         # Capturamos cualquier error que arroje LangChain o la API
         error_str = str(e)
+
+        print(f"🔥 ERROR INTERNO: {error_str}", flush=True)
         
         # Verificamos si el error es por límite de cuota (429)
         if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
