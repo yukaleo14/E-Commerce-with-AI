@@ -1,7 +1,9 @@
 # E-Commerce-with-AI
 Aplicacion de e-commerce estatica sin funcionalidad util, simplemente visual para entender el contexto, donde se podra utilizar el asistente virtual/agente el cual brindara informacion sobre la empresa, productos, politica, entre otras cosas de las cuales obtiene conocimiento segun el documento brindado.
-# TechStore - E-commerce con Asistente Virtual RAG (Gemini)
 
+<img width="1600" height="741" alt="imagen home" src="https://github.com/user-attachments/assets/49d0b44e-e152-47c3-9ce7-dcf9d933cbe0" />
+
+# TechStore - E-commerce con Asistente Virtual RAG (Gemini)
 ## Descripción General
 TechStore es una plataforma web estática orientada al comercio electrónico de componentes informáticos, periféricos y equipos tecnológicos. El principal valor agregado de este proyecto es la integración de un **agente de inteligencia artificial conversacional** directamente en la interfaz de usuario.
 
@@ -31,8 +33,8 @@ El proyecto está construido bajo una arquitectura cliente-servidor con un motor
 *   **FastAPI / Uvicorn:** Framework para la creación de la API y servidor ASGI.
 *   **LangChain:** Framework de orquestación de IA y manejo de memoria (`RunnableWithMessageHistory`).
 *   **Google Gemini (gemini-1.5-flash-001):** Modelo de Lenguaje Grande (LLM) principal.
-*   **ChromaDB:** Base de datos vectorial para almacenar los embeddings.
-*   **Sentence-Transformers (HuggingFace):** Modelo de generación de embeddings (`all-MiniLM-L6-v2`).
+*   **Google Embeddings (text-embedding-004):** Modelo de generación de vectores.
+*   **Pinecone:** Base de datos vectorial administrada en la nube (Serverless Vector Database).
 *   **PyMuPDFLoader:** Extracción y lectura nativa de archivos PDF.
 
 ---
@@ -63,12 +65,14 @@ pip install -r requirements.txt
 ### 4. Configurar Variables de Entorno
 En tu archivo **.env** agrega las siguientes variables
 GOOGLE_API_KEY=tu_clave_de_google_ai_studio_aqui
+PINECONE_API_KEY="tu_clave_de_pinecone"
 ADMIN_PASSWORD=tu_contraseña_segura_para_ingesta
 
 ### 5. Ingestar la Base de Conocimientos
 Con el pdf en el cual se encuentra la documentacion de TechStore, utilizando este comando se creara su base de conocimiento
+Y para evitar sobrecargar el servidor web, la ingesta del documento PDF se realiza de forma local. Ejecuta el script de ingesta para procesar el catálogo y enviar los vectores a tu índice de Pinecone en la nube:
 ```bash
-python -m src.ingest
+python ingest_pinecone.py
 ```
 
 ### 6. Levantar el Servidor
@@ -82,43 +86,36 @@ uvicorn src.main:app --reload
 #### Ejemplos de Interaccion
 Ejemplos de preguntas que el agente puede responder:
 *  **Stock y Catálogo:** "¿Tienen monitores curvos disponibles y cuál es su precio?"
+<img width="417" height="568" alt="img preg monitores" src="https://github.com/user-attachments/assets/a53d6d29-e240-4fe6-a268-ec2c663ba276" />
 
-*  **Políticas de Envíos:** "¿Cuánto demora el envío estándar y qué pasa si no estoy en casa?"
 
-## Despliegue en Producción (Render)
-La aplicación se encuentra desplegada y accesible públicamente utilizando Render como plataforma de Platform-as-a-Service (PaaS). Se optó por una estrategia de despliegue contenerizado para garantizar la consistencia del entorno entre desarrollo y producción.
+* **Sobrecarga del modelo gratuito:** Al tratarse del modelo gratuito de gemini, el agente podra realizar respuestas limitadas segun la cantidad de tokens consumidos, por lo que en caso de que se pase ese limite, el agente respondera con un mensaje aclarando esa situacion al cliente
+<img width="420" height="557" alt="limitacion modelo " src="https://github.com/user-attachments/assets/5620b1aa-34f4-4b46-86e3-e4e15b0efc9e" />
 
-### Arquitectura de Despliegue
-Contenerización (Docker): El proyecto incluye un Dockerfile que empaqueta el sistema operativo base (Linux), las dependencias de Python (requirements.txt), el código fuente y las herramientas del sistema necesarias para compilar librerías complejas como ChromaDB y LangChain.
+## Despliegue en Producción (Render + Pinecone)
 
-Orquestación en Render: El repositorio de GitHub está conectado directamente a un Web Service de Render configurado con el entorno nativo de Docker (Docker Runtime).
+La aplicación se encuentra desplegada utilizando **Render** (como plataforma PaaS para el servidor web) y **Pinecone** (como base de datos vectorial en la nube).
 
-Integración Continua (CI): Cada vez que se realiza un push a la rama principal del repositorio, Render detecta los cambios, reconstruye la imagen del contenedor automáticamente y despliega la nueva versión sin tiempo de inactividad (Zero Downtime Deployment).
+### ¿Por qué esta arquitectura? (Resolución de OOM)
+Durante el desarrollo, la base de datos se almacenaba localmente usando ChromaDB y los embeddings se generaban con modelos de HuggingFace (`sentence-transformers` / `PyTorch`). Sin embargo, el plan gratuito de Render impone un límite estricto de **512 MB de memoria RAM**. Cargar librerías de Deep Learning y procesar el documento en memoria durante el arranque del servidor provocaba errores de `Out of memory (OOM)`.
 
-### Configuración del Entorno de Producción
-Para replicar este despliegue en un entorno propio de Render, se deben seguir estos lineamientos en el panel de configuración del Web Service:
+**La Solución:** Se aplicó el principio de **desacoplamiento**. 
+1. Se delegó el almacenamiento vectorial a **Pinecone**.
+2. Se delegó la creación de embeddings a la API de **Google** (`text-embedding-004`).
+3. Se eliminó la ingesta del PDF del ciclo de vida del servidor web (`main.py`).
 
-Repository: Conectar el repositorio de GitHub que contiene el proyecto.
+De esta manera, el contenedor Docker en Render es ultraligero (consume menos de 150 MB de RAM). FastAPI simplemente actúa como un puente: recibe la consulta del HTML, busca en Pinecone, le pasa el contexto a Gemini y devuelve la respuesta.
 
-Environment / Runtime: Seleccionar Docker (Render detectará el Dockerfile automáticamente).
+### Configuración en Pinecone
+Para que la base de datos sea compatible con los embeddings de Google, el índice en Pinecone debe configurarse con los siguientes parámetros exactos:
+*   **Index Name:** `e-commerce-ai`
+*   **Dimensions:** `3072`
+*   **Metric:** `cosine`
 
-Port Binding: Uvicorn está configurado en la última línea del Dockerfile para escuchar el puerto dinámico asignado por la plataforma (${PORT:-8000}).
+### Configuración en Render
+Para replicar este despliegue en Render, se debe configurar un nuevo *Web Service* utilizando **Docker** como entorno nativo.[cite: 6]
 
-Variables de Entorno (Environment Variables): Se deben inyectar de forma segura en el panel de Render las siguientes credenciales (nunca subirlas al repositorio en el archivo .env):
-
-*  GOOGLE_API_KEY: Clave de acceso a la API de Gemini.
-
-*  ADMIN_PASSWORD: Contraseña para el endpoint de administración.
-
-Y ademas debe agregar la siguiente variable debido a que render utiliza un puerto aleatorio por lo que no se ejecutara la aplicacion:
-
-*  PORT: 8000
-
-### Gestión de la Base Vectorial en la Nube
-Dado que Render utiliza discos efímeros en sus capas gratuitas, la aplicación puede estar configurada para re-ingestar el documento PDF principal (TechStore.pdf) en memoria durante el arranque del contenedor, o bien se le puede anexar un Disco Persistente (Persistent Disk) en la configuración del servicio para mantener la carpeta chroma_db intacta entre reinicios del servidor.
-
-*  **Soporte Post-Venta**: "Compré unos auriculares pero me arrepentí, ¿puedo devolverlos?"
-
-*  **Consultas Técnicas:** "¿Qué especificaciones tiene el Router MikroTik?"
-
-*  **Memoria Conversacional:** "Me interesa la Notebook Dell." -> (En un segundo mensaje): "¿Qué precio tiene?"
+En la pestaña *Environment*, es obligatorio declarar las siguientes variables para que el contenedor pueda enlazar los servicios:
+*   `GOOGLE_API_KEY`: Clave de acceso a la API de Gemini.
+*   `PINECONE_API_KEY`: Credencial de conexión a la base de datos.
+*   `PORT`: `8000` (Para coincidir con la exposición del Dockerfile).
