@@ -93,8 +93,8 @@ Ejemplos de preguntas que el agente puede responder:
 <img width="420" height="557" alt="limitacion modelo " src="https://github.com/user-attachments/assets/5620b1aa-34f4-4b46-86e3-e4e15b0efc9e" />
 
 ## Despliegue en Producción (Render + Pinecone)
-
 La aplicación se encuentra desplegada utilizando **Render** (como plataforma PaaS para el servidor web) y **Pinecone** (como base de datos vectorial en la nube).
+<img width="1445" height="733" alt="img despliegue" src="https://github.com/user-attachments/assets/c424cd30-39a3-41f6-978f-df6efbb45733" />
 
 ### ¿Por qué esta arquitectura? (Resolución de OOM)
 Durante el desarrollo, la base de datos se almacenaba localmente usando ChromaDB y los embeddings se generaban con modelos de HuggingFace (`sentence-transformers` / `PyTorch`). Sin embargo, el plan gratuito de Render impone un límite estricto de **512 MB de memoria RAM**. Cargar librerías de Deep Learning y procesar el documento en memoria durante el arranque del servidor provocaba errores de `Out of memory (OOM)`.
@@ -111,6 +111,8 @@ Para que la base de datos sea compatible con los embeddings de Google, el índic
 *   **Index Name:** `e-commerce-ai`
 *   **Dimensions:** `3072`
 *   **Metric:** `cosine`
+
+<img width="1523" height="722" alt="img pinecone" src="https://github.com/user-attachments/assets/94646d4b-97ea-4ac9-8590-1afca58f9481" />
 
 ### Configuración en Render
 Para replicar este despliegue en Render, se debe configurar un nuevo *Web Service* utilizando **Docker** como entorno nativo.[cite: 6]
